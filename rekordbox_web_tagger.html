@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI MyTag DJ Assistant - Rekordbox XML Processor</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #111111;
+            border: 2px solid #00ff00;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #00ff00;
+            margin: 0;
+            font-size: 24px;
+        }
+        .header h2 {
+            color: #ffff00;
+            margin: 5px 0 0 0;
+            font-size: 16px;
+        }
+        .section {
+            margin: 20px 0;
+            border: 1px solid #333333;
+            padding: 15px;
+        }
+        .section-title {
+            color: #ffff00;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 5px;
+        }
+        .track-info {
+            background: #222222;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #00ff00;
+        }
+        .track-title {
+            color: #ffffff;
+            font-weight: bold;
+        }
+        .track-details {
+            color: #cccccc;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .tag-category {
+            margin: 15px 0;
+        }
+        .tag-category-title {
+            color: #ff6600;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .tag-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .tag-button {
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #666666;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .tag-button:hover {
+            background: #555555;
+            border-color: #00ff00;
+        }
+        .tag-button.selected {
+            background: #00ff00;
+            color: #000000;
+            border-color: #00ff00;
+        }
+        .suggested-tags {
+            background: #001100;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .suggested-tags-title {
+            color: #00ff00;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .apply-button {
+            background: #006600;
+            color: #ffffff;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.2s;
+        }
+        .apply-button:hover {
+            background: #00ff00;
+            color: #000000;
+        }
+        .status-message {
+            background: #001100;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            margin: 10px 0;
+            color: #00ff00;
+        }
+        .input-section {
+            background: #222222;
+            padding: 15px;
+            border: 1px solid #666666;
+            margin: 20px 0;
+        }
+        .file-input {
+            background: #333333;
+            color: #ffffff;
+            border: 1px solid #666666;
+            padding: 8px;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+        }
+        .console-output {
+            background: #000000;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 20px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .console-line {
+            margin: 2px 0;
+        }
+        .console-line.success {
+            color: #00ff00;
+        }
+        .console-line.warning {
+            color: #ffff00;
+        }
+        .console-line.error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI MyTag DJ Assistant - Phase 1 Demo</h1>
+            <h2>====================================</h2>
+        </div>
+
+        <div class="input-section">
+            <div class="section-title">XML File Input</div>
+            <input type="file" class="file-input" id="xmlFile" accept=".xml" onchange="loadXMLFile()">
+            <div style="margin-top: 10px; color: #cccccc; font-size: 12px;">
+                Select your Rekordbox XML file to begin analysis
+            </div>
+        </div>
+
+        <div class="console-output" id="console">
+            <div class="console-line">AI MyTag DJ Assistant - Phase 1 Demo</div>
+            <div class="console-line">====================================</div>
+            <div class="console-line">Waiting for XML file...</div>
+        </div>
+
+        <div class="section" id="trackSection" style="display: none;">
+            <div class="section-title">Current Track Analysis</div>
+            <div class="track-info" id="currentTrack">
+                <!-- Track info will be populated here -->
+            </div>
+
+            <div class="tag-category">
+                <div class="tag-category-title">SITUATION (Priority 1)</div>
+                <div class="tag-buttons" id="situationTags">
+                    <button class="tag-button" onclick="selectTag('SITUATION', '1-Opener')">1-Opener</button>
+                    <button class="tag-button" onclick="selectTag('SITUATION', '2-Build up')">2-Build up</button>
+                    <button class="tag-button" onclick="selectTag('SITUATION', '3-Peak Time')">3-Peak Time</button>
+                    <button class="tag-button" onclick="selectTag('SITUATION', '4-Cool Down')">4-Cool Down</button>
+                    <button class="tag-button" onclick="selectTag('SITUATION', '5-After Hours')">5-After Hours</button>
+                </div>
+            </div>
+
+            <div class="tag-category">
+                <div class="tag-category-title">GENRE (Priority 2)</div>
+                <div class="tag-buttons" id="genreTags">
+                    <button class="tag-button" onclick="selectTag('GENRE', 'Melodic Techno')">Melodic Techno</button>
+                    <button class="tag-button" onclick="selectTag('GENRE', 'Ethnic House')">Ethnic House</button>
+                    <button class="tag-button" onclick="selectTag('GENRE', 'Progressive House')">Progressive House</button>
+                    <button class="tag-button" onclick="selectTag('GENRE', 'Deep House')">Deep House</button>
+                </div>
+            </div>
+
+            <div class="tag-category">
+                <div class="tag-category-title">COMPONENTS (Priority 3)</div>
+                <div class="tag-buttons" id="componentTags">
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Piano')">Piano</button>
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Darbuka')">Darbuka</button>
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Female Vocal')">Female Vocal</button>
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Male Vocal')">Male Vocal</button>
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Strings')">Strings</button>
+                    <button class="tag-button" onclick="selectTag('COMPONENTS', 'Synth Lead')">Synth Lead</button>
+                </div>
+            </div>
+
+            <div class="tag-category">
+                <div class="tag-category-title">MOOD (Priority 4)</div>
+                <div class="tag-buttons" id="moodTags">
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Tribal')">Tribal</button>
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Dreamy')">Dreamy</button>
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Sexy')">Sexy</button>
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Energetic')">Energetic</button>
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Emotional')">Emotional</button>
+                    <button class="tag-button" onclick="selectTag('MOOD', 'Dark')">Dark</button>
+                </div>
+            </div>
+
+            <div class="suggested-tags" id="suggestedTags" style="display: none;">
+                <div class="suggested-tags-title">AI Suggested Tags:</div>
+                <div id="suggestions"></div>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="apply-button" onclick="applySuggestions()">Apply AI Suggestions</button>
+                <button class="apply-button" onclick="applySelectedTags()">Apply Selected Tags</button>
+                <button class="apply-button" onclick="nextTrack()">Next Track</button>
+            </div>
+        </div>
+
+        <div class="status-message" id="statusMessage" style="display: none;">
+            <!-- Status messages will appear here -->
+        </div>
+    </div>
+
+    <script>
+        let currentTracks = [];
+        let currentTrackIndex = 0;
+        let selectedTags = {
+            'SITUATION': null,
+            'GENRE': null,
+            'COMPONENTS': [],
+            'MOOD': []
+        };
+        let aiSuggestions = [];
+
+        function addConsoleMessage(message, type = 'normal') {
+            const console = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = message;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function loadXMLFile() {
+            const fileInput = document.getElementById('xmlFile');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+
+            addConsoleMessage(`Loading XML file: ${file.name}`, 'success');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(e.target.result, 'text/xml');
+                    parseXMLData(xmlDoc);
+                } catch (error) {
+                    addConsoleMessage(`Error parsing XML: ${error.message}`, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseXMLData(xmlDoc) {
+            const tracks = xmlDoc.querySelectorAll('TRACK');
+            currentTracks = [];
+
+            addConsoleMessage(`Found ${tracks.length} tracks in XML`, 'success');
+
+            tracks.forEach((track, index) => {
+                const trackInfo = {
+                    id: track.getAttribute('TrackID') || index,
+                    title: track.getAttribute('Name') || 'Unknown',
+                    artist: track.getAttribute('Artist') || 'Unknown',
+                    bpm: track.getAttribute('AverageBpm') || '0',
+                    genre: track.getAttribute('Genre') || '',
+                    key: track.getAttribute('Tonality') || '',
+                    comments: track.getAttribute('Comments') || '',
+                    location: track.getAttribute('Location') || ''
+                };
+                currentTracks.push(trackInfo);
+            });
+
+            // Find untagged tracks
+            const untaggedTracks = currentTracks.filter(track => !track.comments || track.comments.trim() === '');
+            addConsoleMessage(`Found ${untaggedTracks.length} untagged tracks`, 'warning');
+
+            if (untaggedTracks.length > 0) {
+                currentTracks = untaggedTracks;
+                currentTrackIndex = 0;
+                showTrackSection();
+                loadCurrentTrack();
+                addConsoleMessage('Starting tag suggestion for untagged tracks...', 'success');
+            } else {
+                addConsoleMessage('All tracks are already tagged!', 'success');
+            }
+        }
+
+        function showTrackSection() {
+            document.getElementById('trackSection').style.display = 'block';
+        }
+
+        function loadCurrentTrack() {
+            if (currentTrackIndex >= currentTracks.length) {
+                addConsoleMessage('All tracks processed!', 'success');
+                return;
+            }
+
+            const track = currentTracks[currentTrackIndex];
+            
+            // Update track display
+            document.getElementById('currentTrack').innerHTML = `
+                <div class="track-title">${track.artist} - ${track.title}</div>
+                <div class="track-details">
+                    BPM: ${track.bpm} | Genre: ${track.genre || 'Unknown'} | Key: ${track.key || 'Unknown'}
+                </div>
+            `;
+
+            // Generate AI suggestions
+            generateAISuggestions(track);
+            
+            // Clear previous selections
+            clearSelections();
+
+            addConsoleMessage(`Analyzing: ${track.artist} - ${track.title}`, 'success');
+        }
+
+        function generateAISuggestions(track) {
+            const suggestions = [];
+            const bpm = parseFloat(track.bpm) || 0;
+            const genre = track.genre.toLowerCase();
+
+            // BPM-based situation suggestions
+            if (bpm < 100) {
+                suggestions.push('1-Opener');
+            } else if (bpm < 120) {
+                suggestions.push('2-Build up');
+            } else if (bpm < 130) {
+                suggestions.push('3-Peak Time');
+            } else {
+                suggestions.push('3-Peak Time');
+            }
+
+            // Genre-based suggestions
+            if (genre.includes('house')) {
+                suggestions.push('Progressive House');
+            } else if (genre.includes('techno')) {
+                suggestions.push('Melodic Techno');
+            } else {
+                suggestions.push('Deep House');
+            }
+
+            // Component suggestions based on genre/BPM
+            if (bpm > 125) {
+                suggestions.push('Synth Lead');
+            } else {
+                suggestions.push('Piano');
+            }
+
+            // Mood suggestions
+            if (bpm > 130) {
+                suggestions.push('Energetic');
+            } else {
+                suggestions.push('Dreamy');
+            }
+
+            aiSuggestions = suggestions;
+            displaySuggestions();
+        }
+
+        function displaySuggestions() {
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = aiSuggestions.map(tag => 
+                `<span style="background: #003300; padding: 3px 8px; margin: 2px; display: inline-block; border: 1px solid #00ff00;">${tag}</span>`
+            ).join('');
+            
+            document.getElementById('suggestedTags').style.display = 'block';
+            addConsoleMessage(`AI Suggestions: ${aiSuggestions.join(', ')}`, 'success');
+        }
+
+        function selectTag(category, tag) {
+            // Clear previous selection in single-select categories
+            if (category === 'SITUATION' || category === 'GENRE') {
+                selectedTags[category] = tag;
+                // Update button states
+                const buttons = document.querySelectorAll(`#${category.toLowerCase()}Tags .tag-button`);
+                buttons.forEach(btn => btn.classList.remove('selected'));
+                event.target.classList.add('selected');
+            } else {
+                // Multi-select categories
+                if (!selectedTags[category].includes(tag)) {
+                    selectedTags[category].push(tag);
+                    event.target.classList.add('selected');
+                } else {
+                    selectedTags[category] = selectedTags[category].filter(t => t !== tag);
+                    event.target.classList.remove('selected');
+                }
+            }
+            
+            addConsoleMessage(`Selected: ${tag}`, 'success');
+        }
+
+        function applySuggestions() {
+            // Apply AI suggestions
+            aiSuggestions.forEach(tag => {
+                // Find which category this tag belongs to and apply it
+                const categories = {
+                    'SITUATION': ['1-Opener', '2-Build up', '3-Peak Time', '4-Cool Down', '5-After Hours'],
+                    'GENRE': ['Melodic Techno', 'Ethnic House', 'Progressive House', 'Deep House'],
+                    'COMPONENTS': ['Piano', 'Darbuka', 'Female Vocal', 'Male Vocal', 'Strings', 'Synth Lead'],
+                    'MOOD': ['Tribal', 'Dreamy', 'Sexy', 'Energetic', 'Emotional', 'Dark']
+                };
+
+                for (const [category, tags] of Object.entries(categories)) {
+                    if (tags.includes(tag)) {
+                        if (category === 'SITUATION' || category === 'GENRE') {
+                            selectedTags[category] = tag;
+                        } else {
+                            if (!selectedTags[category].includes(tag)) {
+                                selectedTags[category].push(tag);
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+
+            updateButtonStates();
+            applyTagsToTrack();
+        }
+
+        function applySelectedTags() {
+            applyTagsToTrack();
+        }
+
+        function applyTagsToTrack() {
+            const allTags = [];
+            
+            if (selectedTags.SITUATION) allTags.push(selectedTags.SITUATION);
+            if (selectedTags.GENRE) allTags.push(selectedTags.GENRE);
+            allTags.push(...selectedTags.COMPONENTS);
+            allTags.push(...selectedTags.MOOD);
+
+            if (allTags.length === 0) {
+                addConsoleMessage('No tags selected!', 'error');
+                return;
+            }
+
+            const track = currentTracks[currentTrackIndex];
+            const formattedTags = `MyTag: ${allTags.join(', ')}`;
+            
+            addConsoleMessage(`Applied tags to "${track.title}": ${formattedTags}`, 'success');
+            
+            // Update track in memory
+            track.comments = formattedTags;
+            
+            showStatusMessage(`✅ SUCCESS! Applied ${allTags.length} tags: ${allTags.join(', ')}`);
+        }
+
+        function nextTrack() {
+            currentTrackIndex++;
+            if (currentTrackIndex < currentTracks.length) {
+                loadCurrentTrack();
+            } else {
+                addConsoleMessage('All tracks processed! Analysis complete.', 'success');
+                showStatusMessage('🎉 All untagged tracks have been processed!');
+            }
+        }
+
+        function clearSelections() {
+            selectedTags = {
+                'SITUATION': null,
+                'GENRE': null,
+                'COMPONENTS': [],
+                'MOOD': []
+            };
+            
+            // Clear button states
+            document.querySelectorAll('.tag-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+
+        function updateButtonStates() {
+            clearSelections();
+            
+            // Update button states based on current selections
+            if (selectedTags.SITUATION) {
+                const btn = document.querySelector(`button[onclick*="'${selectedTags.SITUATION}'"]`);
+                if (btn) btn.classList.add('selected');
+            }
+            
+            if (selectedTags.GENRE) {
+                const btn = document.querySelector(`button[onclick*="'${selectedTags.GENRE}'"]`);
+                if (btn) btn.classList.add('selected');
+            }
+            
+            selectedTags.COMPONENTS.forEach(tag => {
+                const btn = document.querySelector(`button[onclick*="'${tag}'"]`);
+                if (btn) btn.classList.add('selected');
+            });
+            
+            selectedTags.MOOD.forEach(tag => {
+                const btn = document.querySelector(`button[onclick*="'${tag}'"]`);
+                if (btn) btn.classList.add('selected');
+            });
+        }
+
+        function showStatusMessage(message) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
